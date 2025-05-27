@@ -2,114 +2,88 @@ const express = require('express');
 const mysql = require('mysql2');
 
 const app = express();
-const port = 3000;
+const PORT = 3000;
 
-// Configuración de la conexión a MySQL
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'diego',
-  password: 'secret1234',
-  database: 'mydb'
+// Configuración de la conexión a la base de datos
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'diego',
+    password: 'secret1234',
+    database: 'mydb'
 });
 
-// Middleware para procesar datos POST
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 
 // Conexión a la base de datos
-connection.connect((err) => {
-  if (err) {
-    console.error('Error al conectar a la base de datos:', err);
-    process.exit(1);
-  }
-  console.log('Conexión exitosa a la base de datos');
-});
-
-// Ruta para el endpoint raíz
-app.get('/', (req, res) => {
-    res.send(`
-        <h1>Bienvenido al servidor de mensajes</h1>
-        <p>Usa los siguientes enlaces para navegar:</p>
-        <ul>
-            <li><a href="/nuevo-mensaje">Escribir un nuevo mensaje</a></li>
-            <li><a href="/mensajes">Ver todos los mensajes</a></li>
-        </ul>
-    `);
-});
-
-// Ruta para mostrar el formulario
-app.get('/nuevo-mensaje', (req, res) => {
-    res.send(`
-        <form action="/guardar-mensaje" method="POST">
-            <label for="mensaje">Escribe tu mensaje:</label><br>
-            <textarea id="mensaje" name="mensaje" rows="4" cols="50" required></textarea><br><br>
-            <button type="submit">Guardar mensaje</button>
-        </form>
-    `);
-});
-
-// Ruta para guardar mensajes
-app.post('/guardar-mensaje', (req, res) => {
-    const { mensaje } = req.body;
-
-    if (!mensaje) {
-        return res.status(400).send('El mensaje no puede estar vacío');
+db.connect(error => {
+    if (error) {
+        console.error('No se pudo conectar a la base de datos:', error.message);
+        process.exit(1);
     }
+    console.log('Base de datos conectada correctamente');
+});
 
-    const query = 'INSERT INTO mensajes (mensaje) VALUES (?)';
-    connection.query(query, [mensaje], (err, result) => {
+// Página principal
+app.get('/', (_req, res) => {
+    res.send(`
+        <h2>Bienvenido al sistema de mensajes</h2>
+        <nav>
+            <a href="/mensaje/nuevo">Crear mensaje</a> |
+            <a href="/mensajes/lista">Ver mensajes</a>
+        </nav>
+    `);
+});
+
+// Formulario para crear un mensaje
+app.get('/mensaje/nuevo', (_req, res) => {
+    res.send(`
+        <h3>Nuevo mensaje</h3>
+        <form method="POST" action="/mensaje/guardar">
+            <textarea name="mensaje" rows="5" cols="40" placeholder="Escribe tu mensaje aquí..." required></textarea><br>
+            <input type="submit" value="Enviar">
+        </form>
+        <a href="/">Volver al inicio</a>
+    `);
+});
+
+// Guardar mensaje en la base de datos
+app.post('/mensaje/guardar', (req, res) => {
+    const texto = req.body.mensaje;
+    if (!texto || texto.trim() === '') {
+        return res.status(400).send('Por favor, escribe un mensaje antes de enviar.<br><a href="/mensaje/nuevo">Volver</a>');
+    }
+    const sql = 'INSERT INTO mensajes (mensaje) VALUES (?)';
+    db.query(sql, [texto], (err) => {
         if (err) {
-            console.error('Error al guardar el mensaje:', err);
+            console.error('No se pudo guardar el mensaje:', err.message);
             return res.status(500).send('Error al guardar el mensaje');
         }
-
-        res.send('Mensaje guardado exitosamente. <a href="/nuevo-mensaje">Escribir otro mensaje</a>');
+        res.send('¡Mensaje guardado! <a href="/mensaje/nuevo">Agregar otro</a> | <a href="/mensajes/lista">Ver todos</a>');
     });
 });
 
-// Ruta para mostrar los mensajes
-app.get('/mensajes', (req, res) => {
-    const query = 'SELECT * FROM mensajes ORDER BY fecha DESC';
-    connection.query(query, (err, results) => {
+// Mostrar todos los mensajes
+app.get('/mensajes/lista', (_req, res) => {
+    const sql = 'SELECT * FROM mensajes ORDER BY fecha DESC';
+    db.query(sql, (err, filas) => {
         if (err) {
-            console.error('Error al obtener los mensajes:', err);
-            return res.status(500).send('Error al obtener los mensajes');
+            console.error('Error al recuperar los mensajes:', err.message);
+            return res.status(500).send('No se pudieron obtener los mensajes');
         }
-
-        let html = `
-            <h1>Mensajes</h1>
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Mensaje</th>
-                        <th>Fecha</th>
-                    </tr>
-                </thead>
-                <tbody>
+        let tabla = `
+            <h2>Listado de mensajes</h2>
+            <table border="1" cellpadding="5">
+                <tr><th>ID</th><th>Mensaje</th><th>Fecha</th></tr>
         `;
-
-        results.forEach(row => {
-            html += `
-                <tr>
-                    <td>${row.id}</td>
-                    <td>${row.mensaje}</td>
-                    <td>${row.fecha}</td>
-                </tr>
-            `;
+        filas.forEach(fila => {
+            tabla += `<tr><td>${fila.id}</td><td>${fila.mensaje}</td><td>${fila.fecha}</td></tr>`;
         });
-
-        html += `
-                </tbody>
-            </table>
-            <br>
-            <a href="/nuevo-mensaje">Escribir un nuevo mensaje</a>
-        `;
-
-        res.send(html);
+        tabla += `</table><br><a href="/">Inicio</a> | <a href="/mensaje/nuevo">Nuevo mensaje</a>`;
+        res.send(tabla);
     });
 });
 
 // Iniciar el servidor
-app.listen(port, () => {
-  console.log(`Servidor Express escuchando en http://localhost:${port}`);
+app.listen(PORT, () => {
+    console.log(`Servidor iniciado en http://localhost:${PORT}`);
 });
