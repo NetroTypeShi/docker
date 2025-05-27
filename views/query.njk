@@ -1,14 +1,17 @@
 {% extends 'base.njk' %}
 
 {% block content %}
+<link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
 <style>
+    body {
+        font-family: 'Montserrat', Arial, sans-serif;
+    }
     .form-container {
         display: flex;
         flex-direction: column;
         align-items: center;
         margin-top: 20px;
     }
-
     .form-container textarea {
         width: 80%;
         height: 100px;
@@ -18,8 +21,8 @@
         border: 1px solid #43a047;
         border-radius: 5px;
         background: #e8f5e9;
+        font-family: 'Montserrat', Arial, sans-serif;
     }
-
     .form-container button {
         padding: 10px 20px;
         font-size: 16px;
@@ -29,13 +32,14 @@
         border-radius: 5px;
         cursor: pointer;
         transition: background-color 0.3s;
+        font-family: 'Montserrat', Arial, sans-serif;
     }
     .form-container button:hover {
         background-color: #388e3c;
     }
 </style>
 
-<h1 style="text-align: center; color: #218838;">Consulta SQL</h1>
+<h1 style="text-align: center; color: #218838; font-family: 'Montserrat', Arial, sans-serif;">Consulta SQL</h1>
 <div class="form-container">
     <form method="POST" action="/query">
         <textarea name="sql" placeholder="Escribe tu consulta SQL aquí..."></textarea>

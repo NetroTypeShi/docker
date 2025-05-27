@@ -1,70 +1,74 @@
 {% extends 'base.njk' %}
 
 {% block content %}
+<link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
 <style>
+    body {
+        font-family: 'Montserrat', Arial, sans-serif;
+    }
     h1 {
         text-align: center;
         margin-bottom: 20px;
+        font-family: 'Montserrat', Arial, sans-serif;
     }
-
-    h2 {
-        text-align: center;
-        margin-bottom: 10px;
-    }
-
     .table-container {
         display: flex;
         justify-content: center;
-        align-items: center;
-        margin-top: 20px;
+        align-items: flex-start;
+        margin-top: 10px;
+        width: 100%;
     }
-
     table {
-        border-collapse: collapse;
-        width: 80%;
-        text-align: left;
+        border-radius: 16px;
+        overflow: hidden;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 85%;
+        background: #fff;
+        box-shadow: 0 4px 24px #a5d6a7aa;
+        font-family: 'Montserrat', Arial, sans-serif;
     }
-
     th, td {
-        border: 1px solid #43a047; /* Verde fuerte */
-        padding: 8px;
-    }
-
-    th {
-        background-color: #43a047; /* Verde fuerte */
-        color: #fff;
+        padding: 14px 18px;
         text-align: center;
+        font-family: 'Montserrat', Arial, sans-serif;
     }
-
+    th {
+        background: #43a047;
+        color: #fff;
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+    }
     tr:nth-child(even) {
-        background-color: #e8f5e9; /* Verde muy claro */
+        background: #e8f5e9;
     }
-
     tr:hover {
-        background-color: #c8e6c9; /* Verde claro al pasar el cursor */
+        background: #c8e6c9;
         transition: background 0.2s;
     }
 </style>
 
 <h1>{{ title }}</h1>
-<table>
-    <thead>
-        <tr>
-            <th>ID Usuario</th>
-            <th>Usuario</th>
-            <th>Mensaje</th>
-            <th>Fecha</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for chat in chats %}
-        <tr>
-            <td>{{ chat.user_id }}</td>
-            <td>{{ chat.usuario }}</td>
-            <td>{{ chat.mensaje or '' }}</td>
-            <td>{{ chat.fecha or '' }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID Usuario</th>
+                <th>Usuario</th>
+                <th>Mensaje</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for chat in chats %}
+            <tr>
+                <td>{{ chat.user_id }}</td>
+                <td>{{ chat.usuario }}</td>
+                <td>{{ chat.mensaje or '' }}</td>
+                <td>{{ chat.fecha or '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
