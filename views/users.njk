@@ -1,0 +1,88 @@
+{% extends 'base.njk' %}
+
+{% block content %}
+<style>
+    body {
+        font-family: 'Montserrat', Arial, sans-serif;
+        background: linear-gradient(120deg, #e8f5e9 0%, #ffffff 100%);
+        margin: 0;
+        padding: 0;
+    }
+    .titulo-principal {
+        text-align: center;
+        font-size: 2.5rem;
+        color: #218838;
+        margin-top: 30px;
+        margin-bottom: 10px;
+        letter-spacing: 2px;
+        font-weight: bold;
+        text-shadow: 1px 1px 6px #b9f6ca;
+    }
+    .subtitulo {
+        text-align: center;
+        font-size: 1.3rem;
+        color: #388e3c;
+        margin-bottom: 30px;
+        font-style: italic;
+    }
+    .table-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        margin-top: 10px;
+        width: 100%;
+    }
+    table {
+        border-radius: 16px;
+        overflow: hidden;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 85%;
+        background: #fff;
+        box-shadow: 0 4px 24px #a5d6a7aa;
+    }
+    th, td {
+        padding: 14px 18px;
+        text-align: center;
+    }
+    th {
+        background: #43a047;
+        color: #fff;
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+    }
+    tr:nth-child(even) {
+        background: #e8f5e9;
+    }
+    tr:hover {
+        background: #c8e6c9;
+        transition: background 0.2s;
+    }
+</style>
+
+<div class="titulo-principal">Usuarios y Mensajes</div>
+<div class="subtitulo">Listado actualizado de usuarios registrados y sus mensajes</div>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID de Usuario</th>
+                <th>Nombre</th>
+                <th>Mensaje</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.login }}</td>
+                <td>{{ user.mensaje or '' }}</td>
+                <td>{{ user.fecha or '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

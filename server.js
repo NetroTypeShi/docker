@@ -1,89 +1,78 @@
-const express = require('express');
-const mysql = require('mysql2');
+import express from 'express';
+import mysql from 'mysql2/promise';
+import nunjucks from 'nunjucks';
 
-const app = express();
-const PORT = 3000;
-
-// Configuración de la conexión a la base de datos
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'diego',
-    password: 'secret1234',
-    database: 'mydb'
+const pool = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: 'pass1234',
+  database: 'paneldb_dump'
 });
 
-app.use(express.urlencoded({ extended: false }));
+const servidor = express();
+const PUERTO = 3000;
 
-// Conexión a la base de datos
-db.connect(error => {
-    if (error) {
-        console.error('No se pudo conectar a la base de datos:', error.message);
-        process.exit(1);
-    }
-    console.log('Base de datos conectada correctamente');
+servidor.use(express.json());
+servidor.use(express.urlencoded({ extended: true }));
+servidor.use(express.static('public'));
+
+nunjucks.configure('views', {
+  autoescape: true,
+  express: servidor
 });
 
-// Página principal
-app.get('/', (_req, res) => {
-    res.send(`
-        <h2>Bienvenido al sistema de mensajes</h2>
-        <nav>
-            <a href="/mensaje/nuevo">Crear mensaje</a> |
-            <a href="/mensajes/lista">Ver mensajes</a>
-        </nav>
+servidor.set('view engine', 'njk');
+servidor.set('views', './views');
+
+servidor.get('/', (req, res) => {
+  res.render('index.njk', { title: 'Inicio' });
+});
+
+servidor.get('/users', async (req, res) => {
+  try {
+    const [usuarios] = await pool.query('SELECT * FROM users');
+    res.render('users.njk', { title: 'Listado de Usuarios', users: usuarios });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('No se pudieron obtener los usuarios');
+  }
+});
+
+servidor.get('/chats', async (req, res) => {
+  try {
+    const [mensajes] = await pool.query(`
+      SELECT u.id AS user_id, u.login AS usuario, c.content AS mensaje, c.created_at AS fecha
+      FROM users u
+      LEFT JOIN chats c ON u.id = c.clientid
+      ORDER BY u.id, c.created_at
     `);
+
+    res.render('chats.njk', { title: 'Usuarios y Mensajes', chats: mensajes });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('No se pudieron obtener los mensajes');
+  }
 });
 
-// Formulario para crear un mensaje
-app.get('/mensaje/nuevo', (_req, res) => {
-    res.send(`
-        <h3>Nuevo mensaje</h3>
-        <form method="POST" action="/mensaje/guardar">
-            <textarea name="mensaje" rows="5" cols="40" placeholder="Escribe tu mensaje aquí..." required></textarea><br>
-            <input type="submit" value="Enviar">
-        </form>
-        <a href="/">Volver al inicio</a>
-    `);
+servidor.get('/query', (req, res) => {
+  res.render('query.njk', { title: 'Consulta SQL' });
 });
 
-// Guardar mensaje en la base de datos
-app.post('/mensaje/guardar', (req, res) => {
-    const texto = req.body.mensaje;
-    if (!texto || texto.trim() === '') {
-        return res.status(400).send('Por favor, escribe un mensaje antes de enviar.<br><a href="/mensaje/nuevo">Volver</a>');
-    }
-    const sql = 'INSERT INTO mensajes (mensaje) VALUES (?)';
-    db.query(sql, [texto], (err) => {
-        if (err) {
-            console.error('No se pudo guardar el mensaje:', err.message);
-            return res.status(500).send('Error al guardar el mensaje');
-        }
-        res.send('¡Mensaje guardado! <a href="/mensaje/nuevo">Agregar otro</a> | <a href="/mensajes/lista">Ver todos</a>');
-    });
+servidor.post('/query', async (req, res) => {
+  const consulta = req.body.sql;
+  if (!consulta) {
+    return res.status(400).json({ error: 'No se recibió ninguna consulta SQL' });
+  }
+
+  try {
+    const [resultado] = await pool.query(consulta);
+    res.json(resultado);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al ejecutar la consulta', details: error.message });
+  }
 });
 
-// Mostrar todos los mensajes
-app.get('/mensajes/lista', (_req, res) => {
-    const sql = 'SELECT * FROM mensajes ORDER BY fecha DESC';
-    db.query(sql, (err, filas) => {
-        if (err) {
-            console.error('Error al recuperar los mensajes:', err.message);
-            return res.status(500).send('No se pudieron obtener los mensajes');
-        }
-        let tabla = `
-            <h2>Listado de mensajes</h2>
-            <table border="1" cellpadding="5">
-                <tr><th>ID</th><th>Mensaje</th><th>Fecha</th></tr>
-        `;
-        filas.forEach(fila => {
-            tabla += `<tr><td>${fila.id}</td><td>${fila.mensaje}</td><td>${fila.fecha}</td></tr>`;
-        });
-        tabla += `</table><br><a href="/">Inicio</a> | <a href="/mensaje/nuevo">Nuevo mensaje</a>`;
-        res.send(tabla);
-    });
-});
-
-// Iniciar el servidor
-app.listen(PORT, () => {
-    console.log(`Servidor iniciado en http://localhost:${PORT}`);
+servidor.listen(PUERTO, () => {
+  console.log(`Servidor activo en http://localhost:${PUERTO}`);
 });

@@ -1,0 +1,70 @@
+{% extends 'base.njk' %}
+
+{% block content %}
+<style>
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .table-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 80%;
+        text-align: left;
+    }
+
+    th, td {
+        border: 1px solid #43a047; /* Verde fuerte */
+        padding: 8px;
+    }
+
+    th {
+        background-color: #43a047; /* Verde fuerte */
+        color: #fff;
+        text-align: center;
+    }
+
+    tr:nth-child(even) {
+        background-color: #e8f5e9; /* Verde muy claro */
+    }
+
+    tr:hover {
+        background-color: #c8e6c9; /* Verde claro al pasar el cursor */
+        transition: background 0.2s;
+    }
+</style>
+
+<h1>{{ title }}</h1>
+<table>
+    <thead>
+        <tr>
+            <th>ID Usuario</th>
+            <th>Usuario</th>
+            <th>Mensaje</th>
+            <th>Fecha</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for chat in chats %}
+        <tr>
+            <td>{{ chat.user_id }}</td>
+            <td>{{ chat.usuario }}</td>
+            <td>{{ chat.mensaje or '' }}</td>
+            <td>{{ chat.fecha or '' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
